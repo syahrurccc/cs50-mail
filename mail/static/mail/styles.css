@@ -11,11 +11,16 @@ textarea {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
+  margin-bottom: 5px;
+}
+
+.read {
+    background-color: rgb(235, 235, 235);
 }
 
 .email-lists:hover {
-    border: 1px solid #aaa;
+    border: 2px solid #aaa;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;
 }
@@ -37,3 +42,10 @@ textarea {
     font-size: 0.9em;
 }
 
+.email-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

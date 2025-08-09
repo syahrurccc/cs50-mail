@@ -25,9 +25,9 @@ textarea {
     cursor: pointer;
 }
 
-.email-sender {
-    flex: 1; 
-    font-weight: bold;
+.email-addresses {
+    flex: 1;
+    flex-direction: column; 
 }
 
 .email-subject {
@@ -48,4 +48,15 @@ textarea {
     align-items: center;
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.email-body {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.email-body:hover {
+    border: 2px solid #aaa;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
 }

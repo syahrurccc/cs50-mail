@@ -60,6 +60,7 @@ function load_mailbox(mailbox) {
 			const div = document.createElement('div');
 			div.setAttribute("id", email.id);
 			div.setAttribute("class", "email-lists");
+			// Mark as read if read
 			if (email.read) {
 				 div.classList.add("read");
 			} 
@@ -85,9 +86,11 @@ function show_email(entry) {
 	.then(response => response.json())
 	.then(email => {
 		console.log(email);
+		// Create email subject
 		const subject = document.createElement('h3');
 		subject.textContent = email.subject;
 
+		// Create email details
 		const details = document.createElement('div');
 		details.setAttribute('class', 'email-details');
 		details.innerHTML = `
@@ -97,17 +100,21 @@ function show_email(entry) {
 			</div>
 			<div class="email-timestamp">${email.timestamp}</div>`;
 
+		// Create email body
 		const content = document.createElement('p');
 		content.setAttribute('class', 'email-body');
 		content.textContent = email.body;
 		content.style.whiteSpace = 'pre-wrap'; // Treat \n as line breaks
-		const emailView = document.querySelector('#email-content')
-		emailView.append(subject, details, content);
 
+		// Append all elements to email-content <div>
+		document.querySelector('#email-content').append(subject, details, content);
+
+		// Set reply button id to email's id
 		document.querySelector('.reply-email').setAttribute('id', entry.id);
 
+		// Set archive button color, text, and id
 		const archive = document.querySelector('.archive-email')
-		// Set archive button color and text
+		
 		if (email.archived) {
 			archive.classList.add('archived', 'btn-outline-danger');
 			archive.textContent = 'Unarchive';
@@ -118,6 +125,7 @@ function show_email(entry) {
 		archive.setAttribute('id', entry.id);
 	});
 	
+	// Set email as read
 	fetch(`/emails/${entry.id}`, {
 		method: 'PUT',
 		body: JSON.stringify({read: true})
@@ -137,6 +145,7 @@ function reply_email(entry) {
 		// Pre-fill the fields
 		document.querySelector('#compose-recipients').value = email.sender;
 
+		// Add "Re:" before subject if not already
 		let subject = email.subject;
 		if (!subject.toLowerCase().startsWith("re:")) {
 			subject = "Re: " + subject;

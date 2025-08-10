@@ -6,13 +6,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
 	document.querySelector('#compose').addEventListener('click', compose_email);
 	document.querySelector('#compose-form').addEventListener('submit', send_email);
-	document.querySelector('#emails-view').addEventListener('click', function(event) {
+
+	// Use event delegation on stable parents for dynamically generated elements
+	document.querySelector('#emails-view').addEventListener('click', (event) => {
 		const entry = event.target.closest('.email-lists');
 		if (entry) {
 			show_email(entry);
 		}
 	});
-	document.querySelector('#view-email').addEventListener('click', function(event) {
+	document.querySelector('#view-email').addEventListener('click', (event) => {
 		const replyBtn = event.target.closest('.reply-email')
 		if (replyBtn) {
 			reply_email(replyBtn);
@@ -56,9 +58,10 @@ async function load_mailbox(mailbox) {
 	try {
 		const response = await fetch(`/emails/${mailbox}`);
 
-		// Check if the API returns anything
+		// Check if the API returns any error
 		if (!response.ok) {
 			const error = await response.json();
+			// Throw error to the nearest catch block
 			throw new Error(error.error);
 		}
 
@@ -67,10 +70,12 @@ async function load_mailbox(mailbox) {
 			const div = document.createElement('div');
 			div.setAttribute("id", email.id);
 			div.setAttribute("class", "email-lists");
+
 			// Mark as read if read
 			if (email.read) {
 				 div.classList.add("read");
 			} 
+
 			div.innerHTML = `
 				<span class="email-addresses"><b>${email.sender}</b></span>
 				<span class="email-subject">${email.subject}</span>
@@ -78,7 +83,6 @@ async function load_mailbox(mailbox) {
 			document.querySelector('#emails-view').append(div);
 		});
 	} catch(error) {
-		// Print error to console
 		console.error(error);
 		show_error(error);
 	}
@@ -103,7 +107,6 @@ async function show_email(entry) {
 
 		const email = await response.json();
 
-		console.log(email);
 		// Create email subject
 		const subject = document.createElement('h3');
 		subject.textContent = email.subject;
@@ -184,7 +187,7 @@ function reply_email(entry) {
 		}
 		document.querySelector('#compose-subject').value = subject;
 
-		const body = `\n\nOn ${email.timestamp} ${email.sender} wrote:\n\n${email.body}`
+		const body = `\n\nOn ${email.timestamp} ${email.sender} wrote:\n\n${email.body}`;
 		document.querySelector('#compose-body').value = body;
 	});
 }
@@ -199,20 +202,24 @@ function send_email(event) {
 	const subject = document.querySelector('#compose-subject').value;
 	const body = document.querySelector('#compose-body').value;
 
+	// Because the key and value variable are the same you can just type the name
+	// Otherwise type it like key : value
 	fetch('/emails', {
 		method: 'POST',
 		body: JSON.stringify({recipients, subject, body})
 	})
 	.then(response => response.json())
 	.then(result => {
-		// Redirect to compose page
-		compose_email();
+		// Redirect to sent/compose page
+		result.message ? load_mailbox('sent') : compose_email();
+		
 		// Show success/error message
 		const alert = document.createElement('div');
 		alert.classList.add('alert', result.message ? 'alert-success' : 'alert-danger');
 		alert.setAttribute('role', 'alert');
 		alert.textContent = result.message || result.error
-		document.querySelector('#compose-view').prepend(alert);
+		document.querySelector(result.message ? '#emails-view' : '#compose-view').prepend(alert);
+		
 		// Remove message after 3 seconds
 		setTimeout(() => alert.remove(), 3000);
 	});
@@ -241,6 +248,8 @@ function archive_email(entry) {
 		method: 'PUT',
 		body: JSON.stringify({archived: !isArchived})
 	});
+
+	load_mailbox('inbox');
 }
 
 function show_error(error) {
@@ -252,6 +261,9 @@ function show_error(error) {
 
 	alert.classList.add('alert', 'alert-danger');
 	alert.setAttribute('role', 'alert');
+
+	// Note: passed error is an error object (JSON-like) not a string
+	// To get the message to the following
 	alert.textContent = error.message
 
 	document.querySelector('#emails-view').prepend(alert);

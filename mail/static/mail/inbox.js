@@ -43,7 +43,7 @@ function compose_email() {
 }
 	
 
-function load_mailbox(mailbox) {
+async function load_mailbox(mailbox) {
   
 	// Show the mailbox and hide other views
 	document.querySelector('#emails-view').style.display = 'block';
@@ -53,9 +53,16 @@ function load_mailbox(mailbox) {
 	// Show the mailbox name
 	document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-	fetch(`/emails/${mailbox}`)
-	.then(response => response.json())
-	.then(emails => {
+	try {
+		const response = await fetch(`/emails/${mailbox}`);
+
+		// Check if the API returns anything
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error);
+		}
+
+		const emails = await response.json();
 		emails.forEach(email => {	
 			const div = document.createElement('div');
 			div.setAttribute("id", email.id);
@@ -70,11 +77,15 @@ function load_mailbox(mailbox) {
 				<span class="email-timestamp">${email.timestamp}</span>`;
 			document.querySelector('#emails-view').append(div);
 		});
-	});
+	} catch(error) {
+		// Print error to console
+		console.error(error);
+		show_error(error);
+	}
 }
 
 
-function show_email(entry) {
+async function show_email(entry) {
 
 	document.querySelector('#view-email').style.display = 'block';
 	document.querySelector('#emails-view').style.display = 'none';
@@ -82,9 +93,16 @@ function show_email(entry) {
 
 	document.querySelector('#email-content').innerHTML = '';
 
-	fetch(`/emails/${entry.id}`)
-	.then(response => response.json())
-	.then(email => {
+	try {
+		const response = await fetch(`/emails/${entry.id}`);
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error);
+		}
+
+		const email = await response.json();
+
 		console.log(email);
 		// Create email subject
 		const subject = document.createElement('h3');
@@ -112,24 +130,38 @@ function show_email(entry) {
 		// Set reply button id to email's id
 		document.querySelector('.reply-email').setAttribute('id', entry.id);
 
-		// Set archive button color, text, and id
-		const archive = document.querySelector('.archive-email')
-		
-		if (email.archived) {
-			archive.classList.add('archived', 'btn-outline-danger');
-			archive.textContent = 'Unarchive';
+		// Hide archive button for sent emails
+		const currentUser = document.body.dataset.user;
+		const archiveBtn = document.querySelector('.archive-email')
+
+		if (email.sender === currentUser) {
+			archiveBtn.style.display = 'none';
 		} else {
-			archive.classList.add('unarchived', 'btn-outline-warning');
-			archive.textContent = 'Archive';
+			archiveBtn.style.display = 'inline-block';
+
+			// Set archive button color, text, and id
+			if (email.archived) {
+				archiveBtn.classList.add('archived', 'btn-outline-danger');
+				archiveBtn.textContent = 'Unarchive';
+			} else {
+				archiveBtn.classList.add('unarchived', 'btn-outline-warning');
+				archiveBtn.textContent = 'Archive';
+			}
+			archiveBtn.setAttribute('id', entry.id);
 		}
-		archive.setAttribute('id', entry.id);
-	});
-	
-	// Set email as read
-	fetch(`/emails/${entry.id}`, {
-		method: 'PUT',
-		body: JSON.stringify({read: true})
-	});
+
+		// Set email as read if not already
+		if (!email.read) {
+			await fetch(`/emails/${entry.id}`, {
+				method: 'PUT',
+				body: JSON.stringify({read: true})
+			});
+		}
+	} catch (error) {
+		// Print error to console
+		console.error(error);
+		show_error(error);
+	}
 }
 
 
@@ -173,14 +205,14 @@ function send_email(event) {
 	})
 	.then(response => response.json())
 	.then(result => {
-		// Redirect to sent page
-		load_mailbox('sent')
+		// Redirect to compose page
+		compose_email();
 		// Show success/error message
 		const alert = document.createElement('div');
 		alert.classList.add('alert', result.message ? 'alert-success' : 'alert-danger');
 		alert.setAttribute('role', 'alert');
 		alert.textContent = result.message || result.error
-		document.querySelector('#emails-view').prepend(alert);
+		document.querySelector('#compose-view').prepend(alert);
 		// Remove message after 3 seconds
 		setTimeout(() => alert.remove(), 3000);
 	});
@@ -209,6 +241,23 @@ function archive_email(entry) {
 		method: 'PUT',
 		body: JSON.stringify({archived: !isArchived})
 	});
+}
+
+function show_error(error) {
+
+	load_mailbox('inbox')
+
+	// Show error message
+	const alert = document.createElement('div');
+
+	alert.classList.add('alert', 'alert-danger');
+	alert.setAttribute('role', 'alert');
+	alert.textContent = error.message
+
+	document.querySelector('#emails-view').prepend(alert);
+
+	// Remove message after 3 seconds
+	setTimeout(() => alert.remove(), 3000);
 }
 
 

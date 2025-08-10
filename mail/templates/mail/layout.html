@@ -9,7 +9,7 @@
         {% block script %}
         {% endblock %}
     </head>
-    <body>
+    <body data-user="{{ request.user.email }}"">
         <div class="container">
             {% block body %}
             {% endblock %}

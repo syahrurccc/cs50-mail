@@ -60,3 +60,22 @@ textarea {
     border: 2px solid #aaa;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+@keyframes hide {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.alert {
+    animation-name: hide;
+    animation-duration: 5s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
+}

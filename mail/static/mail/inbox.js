@@ -133,10 +133,11 @@ async function show_email(entry) {
 		// Set reply button id to email's id
 		document.querySelector('.reply-email').setAttribute('id', entry.id);
 
-		// Hide archive button for sent emails
+		// Get the current user
 		const currentUser = document.body.dataset.user;
 		const archiveBtn = document.querySelector('.archive-email')
 
+		// Hide archive button for sent emails
 		if (email.sender === currentUser) {
 			archiveBtn.style.display = 'none';
 		} else {
@@ -219,9 +220,10 @@ function send_email(event) {
 		alert.setAttribute('role', 'alert');
 		alert.textContent = result.message || result.error
 		document.querySelector(result.message ? '#emails-view' : '#compose-view').prepend(alert);
+		alert.style.animationPlayState = 'running';
 		
 		// Remove message after 3 seconds
-		setTimeout(() => alert.remove(), 3000);
+		setTimeout(() => alert.remove(), 5000);
 	});
 }
 
@@ -252,6 +254,7 @@ function archive_email(entry) {
 	load_mailbox('inbox');
 }
 
+
 function show_error(error) {
 
 	load_mailbox('inbox')
@@ -267,9 +270,10 @@ function show_error(error) {
 	alert.textContent = error.message
 
 	document.querySelector('#emails-view').prepend(alert);
+	alert.style.animationPlayState = 'running';
 
 	// Remove message after 3 seconds
-	setTimeout(() => alert.remove(), 3000);
+	setTimeout(() => alert.remove(), 5000);
 }
 
 
